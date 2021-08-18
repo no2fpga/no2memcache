@@ -1,4 +1,4 @@
-CORE := mem_cache
+CORE := no2memcache
 
 NO2BUILD_DIR ?= $(abspath ../../build)
 include $(NO2BUILD_DIR)/core-rules.mk
