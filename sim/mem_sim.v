@@ -50,7 +50,7 @@ module mem_sim #(
 
 	wire [AL:0] mem_addr;
 	wire [31:0] mem_wdata;
-	reg  [31:0] mem_rdata;
+	wire [31:0] mem_rdata;
 	wire        mem_we;
 
 	// FSM
@@ -63,28 +63,19 @@ module mem_sim #(
 	wire        cmd_last;
 
 
-	// Memory
-	// ------
+	// Memory content
+	// --------------
 
-	initial
-	begin : mem_init
-		integer a;
-
-		if (INIT_FILE == "") begin
-			for (a=0; a<(1<<20)-1; a=a+1)
-				mem[a] = a;
-		end else begin
-			$readmemh(INIT_FILE, mem);
-		end
-	end
-
-	always @(posedge clk)
-	begin
-		if (mem_we)
-			mem[mem_addr] <= mem_wdata;
-
-		mem_rdata <= mem[mem_addr];
-	end
+	memsim_data #(
+		.INIT_FILE(INIT_FILE),
+		.AW(AW)
+	) data_I (
+		.mem_addr  (mem_addr),
+		.mem_wdata (mem_wdata),
+		.mem_rdata (mem_rdata),
+		.mem_we    (mem_we),
+		.clk       (clk)
+	);
 
 
 	// Main FSM
@@ -162,5 +153,46 @@ module mem_sim #(
 	delay_bit #(6)     dly_rlast ((state_cur == ST_READ) ? cmd_last : 1'bx, mi_rlast, clk);
 
 	assign mi_rdata = mi_rstb ? mi_rdata_i : 32'hxxxxxxxx;
+
+endmodule
+
+
+module memsim_data #(
+	parameter INIT_FILE = "",
+	parameter integer AW = 20,
+
+	// auto
+	parameter integer AL = AW - 1
+)(
+	input  wire [AL:0] mem_addr,
+	input  wire [31:0] mem_wdata,
+	output reg  [31:0] mem_rdata,
+	input  wire        mem_we,
+	input  wire        clk
+);
+
+	// Memory array
+	reg [31:0] mem[0:(1<<AW)-1];
+
+	// Init
+	initial
+	begin : mem_init
+		integer a;
+
+		if (INIT_FILE == "") begin
+			for (a=0; a<(1<<AW)-1; a=a+1)
+				mem[a] = 32'hbaadc0de;
+		end else begin
+			$readmemh(INIT_FILE, mem);
+		end
+	end
+
+	always @(posedge clk)
+	begin
+		if (mem_we)
+			mem[mem_addr] <= mem_wdata;
+
+		mem_rdata <= mem[mem_addr];
+	end
 
 endmodule
