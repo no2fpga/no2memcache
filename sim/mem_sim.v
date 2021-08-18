@@ -38,6 +38,7 @@ module mem_sim #(
 
 	localparam [1:0]
 		ST_IDLE		= 0,
+		ST_PAUSE	= 1,
 		ST_WRITE	= 2,
 		ST_READ		= 3;
 
@@ -61,6 +62,10 @@ module mem_sim #(
 	reg  [AL:0] cmd_addr;
 	reg  [ 7:0] cmd_len;
 	wire        cmd_last;
+
+	// Addresses
+	wire [AL:0] rd_addr;
+	wire [AL:0] wr_addr;
 
 
 	// Memory content
@@ -98,13 +103,17 @@ module mem_sim #(
 				if (mi_valid)
 					state_nxt = mi_rw ? ST_READ : ST_WRITE;
 
+			ST_PAUSE:
+				if (!mem_we)
+					state_nxt = ST_IDLE;
+
 			ST_READ:
 				if (cmd_last)
-					state_nxt = ST_IDLE;
+					state_nxt = ST_PAUSE;
 
 			ST_WRITE:
 				if (cmd_last)
-					state_nxt = ST_IDLE;
+					state_nxt = ST_PAUSE;
 		endcase
 	end
 
@@ -130,14 +139,15 @@ module mem_sim #(
 	assign mi_ready = (state_cur == ST_IDLE);
 
 	// Mem access
-	assign mem_addr = cmd_addr;
+	assign mem_addr = mem_we ? wr_addr : rd_addr;
 
 
 	// Write data channel
 	// ------------------
 
 	assign mem_wdata = mi_wdata;
-	delay_bit #(2) dly_we( (state_cur == ST_WRITE), mem_we, clk );
+	delay_bit #(2)     dly_we   ( (state_cur == ST_WRITE), mem_we, clk );
+	delay_bus #(2, 32) dly_waddr( cmd_addr, wr_addr, clk );
 
 	assign mi_wack  = mem_we;
 	delay_bit #(2) dly_wlast( cmd_last, mi_wlast, clk );
@@ -148,6 +158,7 @@ module mem_sim #(
 
 	wire [31:0] mi_rdata_i;
 
+	assign rd_addr = cmd_addr;
 	delay_bus #(5, 32) dly_rdata (mem_rdata, mi_rdata_i, clk);
 	delay_bit #(6)     dly_rstb  ((state_cur == ST_READ), mi_rstb, clk);
 	delay_bit #(6)     dly_rlast ((state_cur == ST_READ) ? cmd_last : 1'bx, mi_rlast, clk);
