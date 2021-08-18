@@ -157,6 +157,23 @@ module mem_sim #(
 endmodule
 
 
+`ifdef CXXRTL
+
+(* cxxrtl_blackbox, cxxrtl_template = "AW" *)
+module memsim_data #(
+	parameter INIT_FILE = "",
+	parameter integer AW = 20,
+)(
+	(* cxxrtl_width = "AW" *) input  wire [AW-1:0] mem_addr,
+	                          input  wire [  31:0] mem_wdata,
+	(* cxxrtl_sync *)         output wire [  31:0] mem_rdata,
+	                          input  wire          mem_we,
+	(* cxxrtl_edge = "p" *)   input  wire          clk
+);
+endmodule
+
+`else
+
 module memsim_data #(
 	parameter INIT_FILE = "",
 	parameter integer AW = 20,
@@ -196,3 +213,5 @@ module memsim_data #(
 	end
 
 endmodule
+
+`endif
