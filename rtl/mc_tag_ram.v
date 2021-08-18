@@ -102,6 +102,15 @@ module mc_tag_ram #(
 	// Write side reg
 	// --------------
 
+`ifdef CXXRTL
+	always @(*)
+	begin
+		w_addr_r = w_addr;
+		w_val_r  = w_val;
+		w_msk_r  = w_msk;
+		w_ena_r  = w_ena;
+	end
+`else
 	always @(posedge clk)
 	begin
 		w_addr_r <= w_addr;
@@ -109,6 +118,7 @@ module mc_tag_ram #(
 		w_msk_r  <= w_msk;
 		w_ena_r  <= w_ena;
 	end
+`endif
 
 
 	// Storage elements
@@ -123,7 +133,11 @@ module mc_tag_ram #(
 				.READ_MODE(RAM_MODE),
 				.WRITE_MODE(RAM_MODE),
 				.MASK_WORKAROUND(1),
+`ifdef CXXRTL
+				.NEG_WR_CLK(0)
+`else
 				.NEG_WR_CLK(1)
+`endif
 			) ram_I (
 				.wr_addr(w_addr_r),
 				.wr_data(w_val_r[i*RAM_DWIDTH+:RAM_DWIDTH]),
