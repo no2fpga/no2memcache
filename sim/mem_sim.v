@@ -48,7 +48,7 @@ module mem_sim #(
 	// Memory array
 	reg [31:0] mem[0:(1<<AW)-1];
 
-	wire [19:0] mem_addr;
+	wire [AL:0] mem_addr;
 	wire [31:0] mem_wdata;
 	reg  [31:0] mem_rdata;
 	wire        mem_we;
@@ -58,7 +58,7 @@ module mem_sim #(
 	reg  [1:0] state_nxt;
 
 	// Command counters
-	reg  [19:0] cmd_addr;
+	reg  [AL:0] cmd_addr;
 	reg  [ 7:0] cmd_len;
 	wire        cmd_last;
 
