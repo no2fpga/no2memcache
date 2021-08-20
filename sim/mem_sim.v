@@ -147,7 +147,7 @@ module mem_sim #(
 
 	assign mem_wdata = mi_wdata;
 	delay_bit #(2)     dly_we   ( (state_cur == ST_WRITE), mem_we, clk );
-	delay_bus #(2, 32) dly_waddr( cmd_addr, wr_addr, clk );
+	delay_bus #(2, AW) dly_waddr( cmd_addr, wr_addr, clk );
 
 	assign mi_wack  = mem_we;
 	delay_bit #(2) dly_wlast( cmd_last, mi_wlast, clk );
